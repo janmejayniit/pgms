@@ -1,0 +1,87 @@
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+__pycache__/
+*.so
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+*.pyc.*
+*.sqlite3
+*.pyo
+
+# Environment variable files
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django migration files
+*/migrations/*
+
+# If you are using a local_settings.py file, exclude it:
+local_settings.py
+
+# Static and media files
+/static/
+/media/
+
+# Django stuff:
+db.sqlite3
+*.log
+
+# Testing
+.pytest_cache/
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.cache
+coverage.xml
+*,cover
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+pylint.report
+
+# Environments
+*.env
+.env.*
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
