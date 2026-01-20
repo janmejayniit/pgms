@@ -1,0 +1,71 @@
+.invoice-container {
+    padding: 20px;
+    font-family: Arial;
+}
+
+.print-btn {
+    margin-bottom: 20px;
+}
+
+.invoice-box {
+    max-width: 800px;
+    margin: auto;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    /*height: 80px;*/
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.total td {
+    font-weight: bold;
+}
+
+@media print {
+    .print-btn {
+        display: none;
+    }
+}
+
+.invoice-wrapper {
+    position: relative;
+    background: white;
+    padding: 40px;
+}
+
+/* WATERMARK */
+.invoice-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 120px;
+    font-weight: 800;
+    color: rgba(200, 0, 0, 0.08);
+    letter-spacing: 12px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+/* CONTENT ABOVE WATERMARK */
+.invoice-content {
+    position: relative;
+    z-index: 1;
+}

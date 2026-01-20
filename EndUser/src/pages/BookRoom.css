@@ -1,0 +1,14 @@
+.card {
+    border-radius: 16px;
+}
+
+input.form-control,
+select.form-select {
+    height: 45px;
+}
+
+img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "id": 2,
+    "room_number": "716",
+    "floor": 98,
+    "room_type": "4 Sharing",
+    "capacity": 4,
+    "current_occupancy": 3,
+    "monthly_rent": "5500.00",
+    "daily_rent": "350.00",
+    "status": "available",
+    "amenities": "Et aperiam at quis q",
+    "room_photo": null,
+    "room_videos": null,
+    "created_at": "2025-11-06T18:25:06.324273Z",
+    "updated_at": "2025-11-06T18:25:06.324273Z",
+    "pg": 3
+  },
+  {
+    "id": 4,
+    "room_number": "100 A",
+    "floor": 4,
+    "room_type": "4 Sharing",
+    "capacity": 250,
+    "current_occupancy": 100,
+    "monthly_rent": "6500.00",
+    "daily_rent": "300.00",
+    "status": "available",
+    "amenities": "",
+    "room_photo": null,
+    "room_videos": null,
+    "created_at": "2025-11-13T15:53:29.689048Z",
+    "updated_at": "2025-11-13T15:53:29.689048Z",
+    "pg": 15
+  }
+]
