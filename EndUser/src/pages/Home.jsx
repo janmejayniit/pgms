@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import PgSearchCards from "../Components/PgSearchCards.jsx";
+import {toast} from "react-toastify";
 
 const Home = () => {
     const API_URL = import.meta.env.VITE_API_URL;
     const [search, setSearch] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const [location, setLocation] = useState({
         lat: null,
         lng: null,
@@ -39,15 +41,18 @@ const Home = () => {
 
     const fetchPgs = async () => {
         try{
+            setLoading(true);
             const response = await fetch(`${API_URL}/properties/properties/`);
             const data = await response.json();
             if(response.status === 200){
                 setSearch(data);
             }
-            setError(response.error);
+            toast.error(response.error);
         }catch (e) {
             console.error(e);
-            setError(e);
+            toast.error(e);
+        }finally {
+            setLoading(false)
         }
     }
 
