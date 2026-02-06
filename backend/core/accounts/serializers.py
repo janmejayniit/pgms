@@ -30,20 +30,29 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'contact_number'
-    
+
     def validate(self, attrs):
         data = super().validate(attrs)
-
-        # Add user info to the response
         user = self.user
         data['user'] = {
             'id': user.id,
-            'first_name':user.first_name,
-            'last_name':user.last_name,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'contact_number': user.contact_number,
             'email': user.email,
             'is_owner': user.is_owner,
             'is_tenant': user.is_tenant,
         }
-
         return data
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class OTPVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField()
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    new_password = serializers.CharField(validators=[validate_password])
