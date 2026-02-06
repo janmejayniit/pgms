@@ -1,75 +1,45 @@
-import {useEffect, useState, useMemo} from 'react';
+import {useEffect, useState} from 'react';
 import { useParams } from "react-router-dom";
 import './BookRoom.css';
 import axios from 'axios';
 import { toast } from "react-toastify";
-import api from '../services/api.jsx'
-import { useNavigate } from "react-router-dom";
 
-
-const BookRoom = () => {
+const BookRoom = (props) => {
 
     const API_URL = import.meta.env.VITE_API_URL;
     const RZPYTKYEID = import.meta.env.VITE_RZPYTKYEID;
-    const navigate = useNavigate();
     const { pg_id } = useParams();
     const {room_id} = useParams();
-
+    const { room_type } = useParams();
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-
-    const [property, setProperty] = useState();
-    const [room, setRoom] = useState([]);
+    const [roomList, setRoomList] = useState([]);
     const [bookingType, setBookingType] = useState("monthly"); // default = monthly
-
+    const [selectedRoom, setSelectedRoom] = useState("");
     const [price, setPrice] = useState({
         monthly_rent: 0,
         daily_rent: 0,
-        platform_charge:100
     });
     const [bookingData, setBookingData] = useState({
         checkin: "",
         checkout: "",
     });
-
-    const fetchPropertiesDetail = async () => {
+    const fetchRoomList = async () =>{
         try{
-            const response = await fetch(`${API_URL}/properties/pg/${pg_id}/`);
+            const response = await fetch(`${API_URL}/properties/rooms/?pg_id=${pg_id}&room_type=${room_type}`);
             const data = await response.json();
             if(response.status === 200){
-                setProperty(data);
-            }
-            if (!response.ok) {
-                throw new Error("Failed to fetch pg details");
-            }
-        }catch (e){
-            console.error(e);
-            toast.error(e);
-        }
-    }
-    const fetRoomDetails = async () => {
-        try{
-            const response = await fetch(`${API_URL}/properties/pg/${pg_id}/rooms/${room_id}/`);
-            const data = await response.json();
-            if(response.status === 200){
-                setRoom(data);
-                setPrice(prev => ({
-                    ...prev,
-                    monthly_rent: Number(data.monthly_rent),
-                    daily_rent: Number(data.daily_rent),
-                }));
+                setRoomList(data);
             }
         }catch (e){
             console.log(e);
         }
     }
-
     useEffect(() => {
-        fetchPropertiesDetail();
-        fetRoomDetails();
-    },[pg_id, room_id])
-
+        fetchRoomList();
+    },[pg_id,room_type])
     useEffect(() => {
+        const room = roomList.find(r => r.id == selectedRoom);
         if (room) {
             let totalDailyPrice = room.daily_rent;
             // If both dates exist → calculate number of days
@@ -83,15 +53,13 @@ const BookRoom = () => {
                 totalDailyPrice = diffDays * room.daily_rent;
             }
             // Set price
-            setPrice(prev => ({
-                ...prev,
-                monthly_rent: Number(room.monthly_rent),
-                daily_rent: Number(room.daily_rent),
+            setPrice({
+                monthly_rent: Number(room.monthly_rent ) ,
+                daily_rent: room.daily_rent,
                 total_daily: totalDailyPrice,
-            }));
+            });
         }
-    }, [bookingData.checkin, bookingData.checkout]);
-
+    }, [selectedRoom, bookingData.checkin, bookingData.checkout]);
     const handleBooking = (e) => {
         e.preventDefault();
 
@@ -119,112 +87,89 @@ const BookRoom = () => {
                 toast.error("Razorpay SDK failed to load");
                 return;
             }
+            if (!selectedRoom) {
+                toast.info("Please select a room");
+                return;
+            }
+            const room = roomList.find(r => r.id == selectedRoom);
             const name =
                 localStorage.getItem("first_name") +
                 " " +
                 localStorage.getItem("last_name");
             const email = localStorage.getItem("email");
             const phone = localStorage.getItem("contact_number");
-
-            const orderResponse = await api.post("/booking/order/create/", {
-                // token_type: "access",
-                pg: room.pg,
-                room: room.id,
-                // user_id: localStorage.getItem("user_id"),
-                // booking_type: bookingType,
-                // checkin: bookingData.checkin,
-                // checkout: bookingType === "daily" ? bookingData.checkout : null,
-                amount:
-                    bookingType === "monthly"
-                        ? price.monthly_rent+price.platform_charge
-                        : Number(price.total_daily) + price.platform_charge,
-            });
-
-            if(orderResponse.status===201){
-                const orderData = orderResponse.data;
-                const bookingRes = await api.post("/booking/create/", {
-                    order: orderData.id,
-                    pg: room.pg,
-                    room: room.id,
-                    booking_type: bookingType,
-                    checkin_date: bookingData.checkin,
-                    checkout_date: bookingType === "daily" ? bookingData.checkout : null,
-                    amount: totalAmount,
-                });
-
-                if (bookingRes.status !== 201 && bookingRes.status !== 200) {
-                    toast.error("Failed to create a booking");
-                    return;
+            //Create booking + Razorpay order (BACKEND)
+            const bookingRes = await fetch(
+                `${API_URL}/billing/create-booking-order/`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        tenant: localStorage.getItem("user_id"),
+                        pg: room.pg,
+                        room: room.id,
+                        booking_type: bookingType,
+                        checkin: bookingData.checkin,
+                        checkout:
+                            bookingType === "daily"
+                                ? bookingData.checkout
+                                : null,
+                        amount:
+                            bookingType === "monthly"
+                                ? price.monthly_rent
+                                : Number(price.total_daily) + 100
+                    }),
                 }
+            );
 
-                //Razorpay checkout
-                const options = {
-                    key: RZPYTKYEID,
-                    amount: orderData.amount*100, // paise
-                    currency: "INR",
-                    order_id: orderData.razorpay_order_id, // Razorpay order id
-                    handler: async function (response) {
-                        try {
-                            const verifyRes = await api.post("/booking/verify-payment/", {
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_signature: response.razorpay_signature,
-                            });
-
-                            if (verifyRes.status === 200) {
-                                toast.success("Payment successful 🎉");
-
-                                // ✅ Redirect to Thank You page
-                                navigate(`/thank-you?order=${response.razorpay_order_id}`);
-                            } else {
-                                toast.error("Payment verification failed");
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            toast.error("Payment verification failed");
-                        }
-                    },
-                    modal: {
-                        ondismiss: async function () {
-                            // user closed payment popup
-                            await api.post(`/booking/payment-failed/`, {
-                                razorpay_order_id: orderData.order_id
-                            });
-                            toast.info("Payment cancelled");
-                        }
-                    },
-                    prefill: {
-                        name: name,
-                        email: email,
-                        contact: phone,
-                    },
-                    theme: {
-                        color: "#3399cc",
-                    },
-                };
-
-                const razorpay = new window.Razorpay(options);
-                razorpay.open();
+            if (!bookingRes.ok) {
+                toast.error("Failed to create a booking")
+                throw new Error("Failed to create booking");
             }
-            if(orderResponse.status!==201){
-                throw new Error("Payment failed");
-                return;
-            }
+            const orderData = await bookingRes.json();
+            //Razorpay checkout
+            const options = {
+                key: RZPYTKYEID,
+                amount: orderData.amount, // paise
+                currency: "INR",
+                order_id: orderData.order_id, // Razorpay order id
+                handler: async function (response) {
+                    //Verify payment
+                    await axios.post(`${API_URL}/billing/verify-payment/`, {
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        tenant: localStorage.getItem("user_id"),
+                    });
+                    // alert("Booking confirmed 🎉");
+                    // window.location.href = "/";
+                },
+                modal: {
+                    ondismiss: async function () {
+                        // user closed payment popup
+                        await axios.post(`${API_URL}/billing/payment-failed/`, {
+                            razorpay_order_id: orderData.order_id
+                        });
+                        toast.info("Payment cancelled");
+                    }
+                },
+                prefill: {
+                    name: name,
+                    email: email,
+                    contact: phone,
+                },
+                theme: {
+                    color: "#3399cc",
+                },
+            };
+            const razorpay = new window.Razorpay(options);
+            razorpay.open();
 
         } catch (err) {
             console.error(err);
             toast.error("Payment failed");
         }
     };
-    const totalAmount = useMemo(() => {
-        return bookingType === "monthly"
-            ? Number(price.monthly_rent || 0) + Number(price.platform_charge || 0)
-            : Number(price.total_daily || price.daily_rent || 0) +
-            Number(price.platform_charge || 0);
-    }, [bookingType, price]);
-
-
-
     return (
         <div className="container my-5">
             <div className="row justify-content-center">
@@ -236,15 +181,14 @@ const BookRoom = () => {
                             {/* Room Header */}
                             <div className="d-flex align-items-center mb-4">
                                 <img
-                                    src="/pg_default.png"
+                                    src="https://via.placeholder.com/100"
                                     className="rounded-3 me-3"
                                     alt="Room"
-                                    style={{width:'100px'}}
                                 />
                                 <div>
-                                    <h3 className="fw-bold mb-1">{property && property.pg_name}</h3>
+                                    <h3 className="fw-bold mb-1">AC Deluxe Room</h3>
                                     <p className="text-muted mb-0">
-                                        <i className="bi bi-geo-alt me-1"></i> {property && property.address}
+                                        <i className="bi bi-geo-alt me-1"></i> MG Road, Bengaluru
                                     </p>
                                 </div>
                             </div>
@@ -272,8 +216,22 @@ const BookRoom = () => {
                                 </div>
                             </div>
                             <form onSubmit={handleBooking}>
-
-
+                                {/* ROOM DROPDOWN */}
+                                <div className="mt-3">
+                                    <label className="fw-semibold">Choose Room</label>
+                                    <select
+                                        className="form-control"
+                                        value={selectedRoom}
+                                        onChange={(e) => setSelectedRoom(e.target.value)}
+                                    >
+                                        <option value="">Choose Room</option>
+                                        {roomList.map((room) => (
+                                            <option key={room.id} value={room.id}>
+                                                Room No {room.room_number} (Floor {room.floor})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                                 {/* DAILY BOOKING FIELDS */}
                                 {bookingType === "daily" && (
                                     <div className="row mt-3">
@@ -339,14 +297,17 @@ const BookRoom = () => {
                                     )}
                                     <div className="d-flex justify-content-between">
                                         <span>Plateform Charges</span>
-                                        <strong>₹{price.platform_charge}</strong>
+                                        <strong>₹100</strong>
                                     </div>
                                     <hr/>
                                     {/* TOTAL */}
                                     <div className="d-flex justify-content-between fs-5 fw-bold">
                                         <span>Total</span>
                                         <span>
-                                           ₹ {totalAmount||0}
+                                                ₹{" "}
+                                            {bookingType === "monthly"
+                                                ? price.monthly_rent || 0
+                                                : (Number(price.total_daily || 0) + 100)}
                                         </span>
                                     </div>
                                 </div>

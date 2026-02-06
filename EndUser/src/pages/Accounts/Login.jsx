@@ -44,8 +44,8 @@ const Login = () => {
           )
         return;
       }
-      localStorage.setItem("refresh", data.refresh);
-      localStorage.setItem("token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      localStorage.setItem("access_token", data.access);
       localStorage.setItem("user_id", data.user.id);
       localStorage.setItem("first_name", data.user.first_name);
       localStorage.setItem("last_name", data.user.last_name);

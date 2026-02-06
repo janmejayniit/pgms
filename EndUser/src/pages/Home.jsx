@@ -12,6 +12,7 @@ const Home = () => {
         lng: null,
         error: null
     });
+    const [properties, setProperties] = useState([])
 
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -42,10 +43,10 @@ const Home = () => {
     const fetchPgs = async () => {
         try{
             setLoading(true);
-            const response = await fetch(`${API_URL}/properties/properties/`);
+            const response = await fetch(`${API_URL}/properties/pg/`);
             const data = await response.json();
             if(response.status === 200){
-                setSearch(data);
+                setProperties(data.results);
             }
             toast.error(response.error);
         }catch (e) {
@@ -90,7 +91,7 @@ const Home = () => {
 
                 <div className="col-md-12 mt-5">
                     {error && <p>Error: {error.message}</p>}
-                    {search.length > 0 && search.map((pg)=>{
+                    {properties.length > 0 && properties.map((pg)=>{
                         return <PgSearchCards  pg={pg}/>
                     })}
                 </div>

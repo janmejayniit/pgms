@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ForgetPassword from "./pages/Accounts/ForgetPassword.jsx";
 import VerifyOTP from "./pages/Accounts/VerifyOTP.jsx";
 import ResetPassword from "./pages/Accounts/ResetPassword.jsx";
+import Logout from "./pages/Accounts/Logout.jsx";
 
 function App() {
 
@@ -20,12 +21,13 @@ function App() {
         <Route  path='/' element={<Layout/>}>
             <Route element={<PrivateRoute/>}>
                 <Route path="/" element={<Home/>}/>
-                <Route path="/pg/:id" element={<PgDetail/>} />
-                <Route path="/pg/:pg_id/book/:room_type" element={<Books />} />
+                <Route path="/pg/:pg_id" element={<PgDetail/>} />
+                <Route path="/pg/:pg_id/book/:room_id" element={<Books />} />
                 <Route path="/dashboard" element={<Dashboard/>} />
                 <Route path="/print/invoice/:id" element={<InvoicePrint />} />
             </Route>
             <Route path="/login" element={<Login/>} />
+            <Route path="/logout" element={<Logout/>} />
             <Route path="/forget/password" element={<ForgetPassword/>} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/reset-password" element={<ResetPassword/>}/>
